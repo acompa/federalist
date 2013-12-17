@@ -1,0 +1,4 @@
+Directory for the Federalist Papers. Grab these from Project Gutenberg if
+you're following along:
+
+  wget http://thomas.loc.gov/home/histdox/fedpaper.txt
