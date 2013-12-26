@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from collections import defaultdict
-import pandas
+import pandas as pd
 import sys
 
 AUTHORS = ('JAY', 'MADISON', 'HAMILTON')
@@ -12,10 +12,7 @@ def create_data_frame(fname):
 	Federalist Papers, convert the file's contents to a pandas.DataFrame.
 	"""
 	with open(fname, 'rU') as f:
-		papers = get_papers(f.readlines())
-
-	# TODO (ac) build data frame
-
+		return pd.DataFrame(data=get_papers(f.readlines()))
 
 def get_papers(flines):
 	"""
@@ -27,22 +24,31 @@ def get_papers(flines):
 	current_paper = []
 	current_author = None
 	paper_count = 0
+	past_greeting = False		# "To the People..." indicates paper's start
+
 	for line in flines:
+		line = line.strip()
 		if line.startswith("FEDERALIST"):
-			if len(current_paper) > 0:
-				papers[paper_count]['contents'] = (' '.join(current_paper))
-				papers[paper_count]['author'] = current_author
-				current_paper = []
-				current_author = None
+			papers[paper_count]['contents'] = (' '.join(current_paper))
+			papers[paper_count]['author'] = current_author
+			current_paper = []
+			current_author = None
+			past_greeting = False
 
 			# There are two No. 70s in Project Gutenberg. Assign random
 			# number to the duplicate paper.
 			paper_count = int(line.split(' ')[-1])
-			if paper_count in papers:
-				paper_count = 100
-		if any(result != -1
-				for result in [line.find(author) for author in AUTHORS]):
-			current_author = line
+			paper_count = 100 if paper_count in papers else paper_count
+
+		# Consume header for each paper. Preserve author.
+		if not past_greeting:
+			if any(result != -1
+					for result in [line.find(author) for author in AUTHORS]):
+				current_author = line
+			if line.find("To the People of the State of New York:") != -1:
+				past_greeting = True
+			continue
+
 		current_paper.append(line)
 	return papers
 
